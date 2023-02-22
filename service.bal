@@ -9,7 +9,9 @@ service /patient on new http:Listener(9091) {
         http:Response|http:ClientError res = sourceEp->get("/8a58266a-d8b3-4f0d-b506-3397df2516f8/" + id);
         if (res is http:Response) {
             json patient = check res.getJsonPayload();
-            return patient;
+            jsonPatient jp = check patient.cloneWithType(jsonPatient);
+            Patient p = convertPatient(jp);
+            return p;
         } else {
             return res;
         }
@@ -37,7 +39,16 @@ service /patient on new http:Listener(9091) {
         http:Response|http:ClientError res = sourceEp->get("/8f3b6d14-c535-496d-826c-4cdf9594b542" + queryString);
         if (res is http:Response) {
             json payload = check res.getJsonPayload();
-            return payload;
+            //cast payload to json[]
+            json[] payloadArray = <json[]>payload;
+            //create patient array from payload
+            Patient[] patients = [];
+            foreach var p in payloadArray {
+                jsonPatient jp = check p.cloneWithType(jsonPatient);
+                Patient patient = convertPatient(jp);
+                patients.push(patient);
+            }
+            return patients;
         } else {
             return res;
         }
